@@ -87,21 +87,32 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
-    """Production configuration (Render)"""
     DEBUG = False
     TESTING = False
-    
-    # Production host settings
+
     HOST = "0.0.0.0"
-    PORT = 5000  # Render expects port 5000
-    
-    # Production database (use environment variable)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    
-    # If no DATABASE_URL, disable database for now
-    if not SQLALCHEMY_DATABASE_URI:
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///memory.db'
-        SQLALCHEMY_TRACK_MODIFICATIONS = False
+    PORT = 5000
+
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+
+    if DATABASE_URL:
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace(
+            "postgres://", "postgresql://", 1
+        )
+
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "pool_recycle": 300,
+            "pool_timeout": 30,
+            "pool_size": 10,
+            "max_overflow": 20,
+            "pool_pre_ping": True,
+        }
+
+    else:
+        # 🔥 SQLite fallback (NO pooling)
+        SQLALCHEMY_DATABASE_URI = "sqlite:///memory.db"
+        SQLALCHEMY_ENGINE_OPTIONS = {}
+
 
 
 # Dictionary to easily access configs
