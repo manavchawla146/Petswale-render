@@ -96,8 +96,12 @@ class ProductionConfig(Config):
     PORT = 5000  # Render expects port 5000
     
     # Production database (use environment variable)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 
-        "postgresql://user:password@localhost:5432/database")
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    
+    # If no DATABASE_URL, disable database for now
+    if not SQLALCHEMY_DATABASE_URI:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///memory.db'
+        SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 # Dictionary to easily access configs
