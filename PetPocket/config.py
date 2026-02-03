@@ -1,123 +1,52 @@
-
 import os
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-# Load environment variables from project root .env file
-load_dotenv(os.path.join(BASE_DIR, '..', '.env'))
+
+# .env ONLY for local
+load_dotenv(os.path.join(BASE_DIR, "..", ".env"))
+
 
 class Config:
-    # --------------------------------------------------
-    # FLASK CORE
-    # --------------------------------------------------
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'petswale_super_secret_key_2025')
+    SECRET_KEY = os.environ.get("SECRET_KEY")
 
-    DEBUG = False
-    TESTING = False
-
-    # --------------------------------------------------
-    # DATABASE (LOCAL MYSQL ON SAME VPS)
-    # --------------------------------------------------
-    # Make sure this DB + user exists in MySQL
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'SQLALCHEMY_DATABASE_URI',
-        "mysql+pymysql://petswale_user:StrongPassword123!@localhost/petswale_db"
-    )
-
+    SQLALCHEMY_DATABASE_URI = None
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_recycle": 300,
-        "pool_timeout": 30,
-        "pool_size": 10,
-        "max_overflow": 20,
-        "pool_pre_ping": True,
-    }
-
-    # --------------------------------------------------
-    # SESSION / SECURITY
-    # --------------------------------------------------
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = False   # set TRUE only after HTTPS
+    SESSION_COOKIE_SECURE = False
 
-    SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT', 'petswale_password_salt')
-
-    # --------------------------------------------------
-    # CSRF
-    # --------------------------------------------------
     WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = 3600
-    WTF_CSRF_SSL_STRICT = False     # enable after HTTPS
 
-    # --------------------------------------------------
-    # RAZORPAY
-    # --------------------------------------------------
-    RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_live_RGkEP4XjZZVrxv')
-    RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'LR0Iqe9U0XVEPzsxYo78MmOe')
+    RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 
-    # --------------------------------------------------
-    # GOOGLE OAUTH
-    # --------------------------------------------------
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', "1047039162052-7e0fgrt2prvkcl2ta0ojao471ifs0c01.apps.googleusercontent.com")
-    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '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')
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
-    # --------------------------------------------------
-    # FILE UPLOADS
-    # --------------------------------------------------
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, "static/uploads")
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
 
 
 class DevelopmentConfig(Config):
-    """Local development configuration"""
     DEBUG = True
-    TESTING = False
-    
-    # Use existing petpocket.db database with preloaded data
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, '..', 'instance', 'petpocket.db')}"
-    
-    # Less strict security for local dev
-    SESSION_COOKIE_SECURE = False
-    WTF_CSRF_SSL_STRICT = False
-    
-    # Local host
-    HOST = "127.0.0.1"
-    PORT = 5000
+    SQLALCHEMY_DATABASE_URI = (
+        f"sqlite:///{os.path.join(BASE_DIR, '..', 'instance', 'petpocket.db')}"
+    )
 
 
 class ProductionConfig(Config):
     DEBUG = False
-    TESTING = False
-
-    HOST = "0.0.0.0"
-    PORT = 5000
 
     DATABASE_URL = os.environ.get("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace(
+        "postgres://", "postgresql://", 1
+    )
 
-    if DATABASE_URL:
-        SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace(
-            "postgres://", "postgresql://", 1
-        )
-
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            "pool_recycle": 300,
-            "pool_timeout": 30,
-            "pool_size": 10,
-            "max_overflow": 20,
-            "pool_pre_ping": True,
-        }
-
-    else:
-        # 🔥 SQLite fallback (NO pooling)
-        SQLALCHEMY_DATABASE_URI = "sqlite:///memory.db"
-        SQLALCHEMY_ENGINE_OPTIONS = {}
-
-
-
-# Dictionary to easily access configs
-config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'default': DevelopmentConfig
-}
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 5,
+        "max_overflow": 5,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
