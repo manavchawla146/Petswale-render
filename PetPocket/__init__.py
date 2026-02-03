@@ -42,7 +42,7 @@ def create_app(config_class):
     def unauthorized():
         if request.is_json:
             return jsonify(success=False, message="Login required"), 401
-        return redirect(url_for("auth.signin"))
+        return redirect(url_for("auth.login"))
 
     # ---- RAZORPAY ----
     global razorpay_client

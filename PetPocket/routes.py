@@ -6,7 +6,7 @@ from . import db
 from flask import current_app
 from . import razorpay_client
 from datetime import datetime
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, and_
 from flask_wtf.csrf import validate_csrf, CSRFError  # Added for explicit CSRF validation
 from werkzeug.exceptions import BadRequest, NotFound, HTTPException # Added NotFound for explicit handling
 
@@ -1241,8 +1241,7 @@ def pet_parent_loves():
         ).group_by(
             Product.id
         ).having(
-            func.count(Review.id) >= 3,
-            func.avg(Review.rating) >= 4.0  # Only highly rated products
+            and_(func.count(Review.id) >= 3, func.avg(Review.rating) >= 4.0)
         ).order_by(
             func.avg(Review.rating).desc()
         ).limit(10).all()
@@ -1452,8 +1451,7 @@ def home_products():
         ).group_by(
             Product.id
         ).having(
-            func.count(Review.id) >= 3,
-            func.avg(Review.rating) >= 4.0
+            and_(func.count(Review.id) >= 3, func.avg(Review.rating) >= 4.0)
         ).order_by(
             func.avg(Review.rating).desc()
         ).limit(20).all()

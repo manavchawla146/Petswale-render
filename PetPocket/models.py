@@ -38,7 +38,12 @@ class User(UserMixin, db.Model):
     def verify_password(self, password):
         if not self.password_hash:
             return False
-        return check_password_hash(self.password_hash, password)
+        try:
+            return check_password_hash(self.password_hash, password)
+        except (ValueError, TypeError) as e:
+            # Handle unsupported hash formats (e.g., scrypt format)
+            # For now, return False - user needs to reset password
+            return False
 
     def __repr__(self):
         return f'<User {self.username}>'
